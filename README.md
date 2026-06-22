@@ -26,8 +26,6 @@ This project demonstrates the implementation of a Library Management System usin
 - **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
 
 ```sql
-CREATE DATABASE library_db;
-
 DROP TABLE IF EXISTS branch;
 CREATE TABLE branch
 (
@@ -36,7 +34,6 @@ CREATE TABLE branch
             branch_address VARCHAR(30),
             contact_no VARCHAR(15)
 );
-
 
 -- Create table "Employee"
 DROP TABLE IF EXISTS employees;
@@ -50,7 +47,6 @@ CREATE TABLE employees
             FOREIGN KEY (branch_id) REFERENCES  branch(branch_id)
 );
 
-
 -- Create table "Members"
 DROP TABLE IF EXISTS members;
 CREATE TABLE members
@@ -60,7 +56,6 @@ CREATE TABLE members
             member_address VARCHAR(30),
             reg_date DATE
 );
-
 
 
 -- Create table "Books"
@@ -106,7 +101,6 @@ CREATE TABLE return_status
             return_book_isbn VARCHAR(50),
             FOREIGN KEY (return_book_isbn) REFERENCES books(isbn)
 );
-
 ```
 
 ### 2. CRUD Operations
@@ -268,7 +262,8 @@ WHERE
     rs.return_date IS NULL
     AND
     (CURRENT_DATE - ist.issued_date) > 30
-ORDER BY 1
+ORDER BY 1;
+
 ```
 
 
@@ -278,6 +273,30 @@ Write a query to update the status of books in the books table to "Yes" when the
 
 ```sql
 
+SELECT * FROM issued_status
+WHERE issued_book_isbn = '978-0-330-25864-8';
+-- IS104
+
+SELECT * FROM books
+WHERE isbn = '978-0-451-52994-2';
+
+UPDATE books
+SET status = 'no'
+WHERE isbn = '978-0-451-52994-2';
+
+SELECT * FROM return_status
+WHERE issued_id = 'IS130';
+ALTER TABLE return_status
+ADD COLUMN book_quality VARCHAR(10);
+-- 
+INSERT INTO return_status(return_id, issued_id, return_date, book_quality)
+VALUES
+('RS125', 'IS130', CURRENT_DATE, 'Good');
+SELECT * FROM return_status
+WHERE issued_id = 'IS130';
+
+
+-- Store Procedures
 CREATE OR REPLACE PROCEDURE add_return_records(p_return_id VARCHAR(10), p_issued_id VARCHAR(10), p_book_quality VARCHAR(10))
 LANGUAGE plpgsql
 AS $$
@@ -309,13 +328,15 @@ BEGIN
     RAISE NOTICE 'Thank you for returning the book: %', v_book_name;
     
 END;
-$$
+$$;
+    
+
 
 
 -- Testing FUNCTION add_return_records
 
-issued_id = IS135
-ISBN = WHERE isbn = '978-0-307-58837-1'
+--issued_id = IS135
+--ISBN = WHERE isbn = '978-0-307-58837-1'
 
 SELECT * FROM books
 WHERE isbn = '978-0-307-58837-1';
@@ -328,6 +349,8 @@ WHERE issued_id = 'IS135';
 
 -- calling function 
 CALL add_return_records('RS138', 'IS135', 'Good');
+
+
 
 -- calling function 
 CALL add_return_records('RS148', 'IS140', 'Good');
@@ -382,8 +405,8 @@ WHERE member_id IN (SELECT
                         issued_date >= CURRENT_DATE - INTERVAL '2 month'
                     )
 ;
-
 SELECT * FROM active_members;
+
 
 ```
 
@@ -403,7 +426,7 @@ ON e.emp_id = ist.issued_emp_id
 JOIN
 branch as b
 ON e.branch_id = b.branch_id
-GROUP BY 1, 2
+GROUP BY 1, 2;
 ```
 
 **Task 18: Identify Members Issuing High-Risk Books**  
@@ -457,7 +480,7 @@ BEGIN
         RAISE NOTICE 'Sorry to inform you the book you have requested is unavailable book_isbn: %', p_issued_book_isbn;
     END IF;
 END;
-$$
+$$;
 
 -- Testing The function
 SELECT * FROM books;
@@ -486,6 +509,26 @@ Description: Write a CTAS query to create a new table that lists each member and
     Member ID
     Number of overdue books
     Total fines
+```sql
+CREATE TABLE overdue_member_summary AS
+SELECT
+    i.issued_member_id AS member_id,
+    COUNT(*) AS overdue_books,
+    ROUND(
+        SUM(
+            (CURRENT_DATE - i.issued_date - 30) * 0.50
+        ),
+        2
+    ) AS total_fines
+FROM issued_status i
+LEFT JOIN return_status r
+    ON i.issued_id = r.issued_id
+WHERE r.issued_id IS NULL
+    AND CURRENT_DATE - i.issued_date > 30
+GROUP BY i.issued_member_id;
+SELECT *
+FROM overdue_member_summary;
+``` 
 
 
 
@@ -499,24 +542,9 @@ Description: Write a CTAS query to create a new table that lists each member and
 
 This project demonstrates the application of SQL skills in creating and managing a library management system. It includes database setup, data manipulation, and advanced querying, providing a solid foundation for data management and analysis.
 
-## How to Use
 
-1. **Clone the Repository**: Clone this repository to your local machine.
-   ```sh
-   git clone https://github.com/najirh/Library-System-Management---P2.git
-   ```
-
-2. **Set Up the Database**: Execute the SQL scripts in the `database_setup.sql` file to create and populate the database.
-3. **Run the Queries**: Use the SQL queries in the `analysis_queries.sql` file to perform the analysis.
-4. **Explore and Modify**: Customize the queries as needed to explore different aspects of the data or answer additional questions.
-
-## Author - Zero Analyst
 
 This project showcases SQL skills essential for database management and analysis. For more content on SQL and data analysis, connect with me through the following channels:
 
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community for learning and collaboration](https://discord.gg/36h5f2Z5PK)
 
 Thank you for your interest in this project!
